@@ -10,6 +10,11 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  // Deploy target: build the Nitro server for Netlify (server functions + static assets)
+  // instead of the default Cloudflare Worker output, which Netlify can't serve.
+  nitro: {
+    preset: "netlify",
+  },
   vite: {
     plugins: [],
   },
