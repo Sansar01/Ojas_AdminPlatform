@@ -5,7 +5,3 @@
 [build.environment]
   NODE_VERSION = "24"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
