@@ -4,8 +4,7 @@
 
 // export const API_BASE = "http://localhost:3000";
 // export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
-export const API_BASE = " http://127.0.0.1:8000";
-//?? "https://cloud-his-backend.onrender.com";
+export const API_BASE = "https://cloud-his-backend.onrender.com";
 
 const ACCESS_KEY = "medi.accessToken";
 const REFRESH_KEY = "medi.refreshToken";
