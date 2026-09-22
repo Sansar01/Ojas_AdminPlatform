@@ -15,6 +15,7 @@ import { Route as AdminShellRouteImport } from './routes/admin/_shell'
 import { Route as AdminShellUsersRouteImport } from './routes/admin/_shell/users'
 import { Route as AdminShellDashboardRouteImport } from './routes/admin/_shell/dashboard'
 import { Route as AdminShellAuditLogsRouteImport } from './routes/admin/_shell/audit-logs'
+import { Route as AdminShellActivateHospitalRouteImport } from './routes/admin/_shell/activate-hospital'
 import { Route as AdminShellPackagesIndexRouteImport } from './routes/admin/_shell/packages/index'
 import { Route as AdminShellHospitalsIndexRouteImport } from './routes/admin/_shell/hospitals/index'
 import { Route as AdminShellPackagesCreateRouteImport } from './routes/admin/_shell/packages/create'
@@ -52,6 +53,12 @@ const AdminShellAuditLogsRoute = AdminShellAuditLogsRouteImport.update({
   path: '/audit-logs',
   getParentRoute: () => AdminShellRoute,
 } as any)
+const AdminShellActivateHospitalRoute =
+  AdminShellActivateHospitalRouteImport.update({
+    id: '/activate-hospital',
+    path: '/activate-hospital',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
 const AdminShellPackagesIndexRoute = AdminShellPackagesIndexRouteImport.update({
   id: '/packages/',
   path: '/packages/',
@@ -91,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminShellRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/activate-hospital': typeof AdminShellActivateHospitalRoute
   '/admin/audit-logs': typeof AdminShellAuditLogsRoute
   '/admin/dashboard': typeof AdminShellDashboardRoute
   '/admin/users': typeof AdminShellUsersRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminShellRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/activate-hospital': typeof AdminShellActivateHospitalRoute
   '/admin/audit-logs': typeof AdminShellAuditLogsRoute
   '/admin/dashboard': typeof AdminShellDashboardRoute
   '/admin/users': typeof AdminShellUsersRoute
@@ -120,6 +129,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin/_shell': typeof AdminShellRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/_shell/activate-hospital': typeof AdminShellActivateHospitalRoute
   '/admin/_shell/audit-logs': typeof AdminShellAuditLogsRoute
   '/admin/_shell/dashboard': typeof AdminShellDashboardRoute
   '/admin/_shell/users': typeof AdminShellUsersRoute
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin/login'
+    | '/admin/activate-hospital'
     | '/admin/audit-logs'
     | '/admin/dashboard'
     | '/admin/users'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin/login'
+    | '/admin/activate-hospital'
     | '/admin/audit-logs'
     | '/admin/dashboard'
     | '/admin/users'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/_shell'
     | '/admin/login'
+    | '/admin/_shell/activate-hospital'
     | '/admin/_shell/audit-logs'
     | '/admin/_shell/dashboard'
     | '/admin/_shell/users'
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellAuditLogsRouteImport
       parentRoute: typeof AdminShellRoute
     }
+    '/admin/_shell/activate-hospital': {
+      id: '/admin/_shell/activate-hospital'
+      path: '/activate-hospital'
+      fullPath: '/admin/activate-hospital'
+      preLoaderRoute: typeof AdminShellActivateHospitalRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
     '/admin/_shell/packages/': {
       id: '/admin/_shell/packages/'
       path: '/packages'
@@ -271,6 +291,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminShellRouteChildren {
+  AdminShellActivateHospitalRoute: typeof AdminShellActivateHospitalRoute
   AdminShellAuditLogsRoute: typeof AdminShellAuditLogsRoute
   AdminShellDashboardRoute: typeof AdminShellDashboardRoute
   AdminShellUsersRoute: typeof AdminShellUsersRoute
@@ -283,6 +304,7 @@ interface AdminShellRouteChildren {
 }
 
 const AdminShellRouteChildren: AdminShellRouteChildren = {
+  AdminShellActivateHospitalRoute: AdminShellActivateHospitalRoute,
   AdminShellAuditLogsRoute: AdminShellAuditLogsRoute,
   AdminShellDashboardRoute: AdminShellDashboardRoute,
   AdminShellUsersRoute: AdminShellUsersRoute,

@@ -4,7 +4,8 @@
 
 // export const API_BASE = "http://localhost:3000";
 // export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
-export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
+export const API_BASE = " http://127.0.0.1:8000";
+//?? "https://cloud-his-backend.onrender.com";
 
 const ACCESS_KEY = "medi.accessToken";
 const REFRESH_KEY = "medi.refreshToken";
@@ -276,12 +277,15 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ packageId, startDate: new Date().toISOString() }),
       }),
-    activate: (id: number) =>
+    activate: (id: number, packageId?: number) =>
       apiFetch<{
         hospital: Hospital;
         admin: { email: string; password?: string };
         created: boolean;
-      }>(`/api/hospitals/${id}/activate`, { method: "POST" }),
+      }>(`/api/hospitals/${id}/activate`, {
+        method: "POST",
+        body: JSON.stringify({ packageId }),
+      }),
     suspend: (id: number) => apiFetch<Hospital>(`/api/hospitals/${id}/suspend`, { method: "POST" }),
     reactivate: (id: number) =>
       apiFetch<Hospital>(`/api/hospitals/${id}/reactivate`, { method: "POST" }),
@@ -324,12 +328,7 @@ export const api = {
       return apiFetch<PlatformUser[]>(`/api/platform-users${q}`);
     },
     get: (id: string) => apiFetch<PlatformUser>(`/api/platform-users/${id}`),
-    create: (dto: {
-      name: string;
-      email: string;
-      role: PlatformRole;
-      password?: string;
-    }) =>
+    create: (dto: { name: string; email: string; role: PlatformRole; password?: string }) =>
       apiFetch<PlatformUser>("/api/platform-users", {
         method: "POST",
         body: JSON.stringify(dto),
@@ -339,8 +338,7 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(dto),
       }),
-    delete: (id: string) =>
-      apiFetch<void>(`/api/platform-users/${id}`, { method: "DELETE" }),
+    delete: (id: string) => apiFetch<void>(`/api/platform-users/${id}`, { method: "DELETE" }),
     disable: (id: string) =>
       apiFetch<void>(`/api/platform-users/${id}/disable`, { method: "POST" }),
     enable: (id: string) => apiFetch<void>(`/api/platform-users/${id}/enable`, { method: "POST" }),

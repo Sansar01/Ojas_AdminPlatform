@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Hospital, Package, Users, ScrollText, Stethoscope, ChevronLeft,
+  LayoutDashboard, Hospital, Package, Users, ScrollText, Stethoscope, ChevronLeft, Power,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/hospitals", label: "Hospitals", icon: Hospital },
+  { to: "/admin/activate-hospital", label: "Activate Hospital", icon: Power },
   { to: "/admin/packages", label: "Packages", icon: Package },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
