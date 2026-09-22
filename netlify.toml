@@ -4,8 +4,3 @@
 
 [build.environment]
   NODE_VERSION = "24"
-
-[[redirects]]
-  from = "/*"
-  to = "~/src/routes/index.tsx"
-  status = 200
