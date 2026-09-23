@@ -183,7 +183,27 @@ export type Package = {
 export type CatalogModule = {
   id: number;
   name: string;
-  description?: string;
+  code: string;
+  route?: string | null;
+  icon?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  parentId?: number | null;
+  features?: { feature: CatalogFeature }[];
+  children?: CatalogModule[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type CatalogFeature = {
+  id: number;
+  name: string;
+  code: string;
+  description?: string | null;
+  /** GET /catalog/features flattens the join — modules come back as { id, name, code } directly. */
+  modules?: Pick<CatalogModule, "id" | "name" | "code">[];
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type AuditLog = {
@@ -304,7 +324,55 @@ export const api = {
   },
   catalog: {
     modules: () => apiFetch<CatalogModule[]>("/api/catalog/modules"),
-    features: () => apiFetch<unknown[]>("/api/catalog/features"),
+    getModule: (id: number) => apiFetch<CatalogModule>(`/api/catalog/modules/${id}`),
+    createModule: (dto: {
+      name: string;
+      code: string;
+      route?: string;
+      icon?: string;
+      parentId?: number;
+      sortOrder?: number;
+    }) =>
+      apiFetch<CatalogModule>("/api/catalog/modules", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
+    updateModule: (
+      id: number,
+      dto: Partial<{
+        name: string;
+        route?: string;
+        icon?: string;
+        sortOrder?: number;
+        isActive?: boolean;
+      }>,
+    ) =>
+      apiFetch<CatalogModule>(`/api/catalog/modules/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(dto),
+      }),
+    deleteModule: (id: number) =>
+      apiFetch<void>(`/api/catalog/modules/${id}`, { method: "DELETE" }),
+    features: () => apiFetch<CatalogFeature[]>("/api/catalog/features"),
+    createFeature: (dto: { name: string; code: string; description?: string }) =>
+      apiFetch<CatalogFeature>("/api/catalog/features", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
+    updateFeature: (
+      id: number,
+      dto: Partial<{ name: string; description?: string }>,
+    ) =>
+      apiFetch<CatalogFeature>(`/api/catalog/features/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(dto),
+      }),
+    deleteFeature: (id: number) =>
+      apiFetch<void>(`/api/catalog/features/${id}`, { method: "DELETE" }),
+    attachFeature: (moduleId: number, featureId: number) =>
+      apiFetch<void>(`/api/catalog/modules/${moduleId}/features/${featureId}`, {
+        method: "POST",
+      }),
   },
   auditLogs: {
     list: (params?: { page?: number; limit?: number; action?: string; actorEmail?: string }) => {

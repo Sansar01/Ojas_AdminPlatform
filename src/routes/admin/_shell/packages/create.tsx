@@ -170,7 +170,7 @@ function CreatePackage() {
                       key={m.id}
                       type="button"
                       onClick={() => toggleModule(m.id)}
-                      title={m.description}
+                      title={m.route ?? m.code}
                       className={`inline-flex items-center gap-2 h-9 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                         on
                           ? "border-accent bg-accent/10 text-accent-foreground"

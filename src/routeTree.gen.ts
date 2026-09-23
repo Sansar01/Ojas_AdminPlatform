@@ -21,6 +21,8 @@ import { Route as AdminShellHospitalsIndexRouteImport } from './routes/admin/_sh
 import { Route as AdminShellPackagesCreateRouteImport } from './routes/admin/_shell/packages/create'
 import { Route as AdminShellHospitalsCreateRouteImport } from './routes/admin/_shell/hospitals/create'
 import { Route as AdminShellHospitalsIdRouteImport } from './routes/admin/_shell/hospitals/$id'
+import { Route as AdminShellCatalogModulesRouteImport } from './routes/admin/_shell/catalog/modules'
+import { Route as AdminShellCatalogFeaturesRouteImport } from './routes/admin/_shell/catalog/features'
 import { Route as AdminShellPackagesIdEditRouteImport } from './routes/admin/_shell/packages/$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -87,6 +89,18 @@ const AdminShellHospitalsIdRoute = AdminShellHospitalsIdRouteImport.update({
   path: '/hospitals/$id',
   getParentRoute: () => AdminShellRoute,
 } as any)
+const AdminShellCatalogModulesRoute =
+  AdminShellCatalogModulesRouteImport.update({
+    id: '/catalog/modules',
+    path: '/catalog/modules',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
+const AdminShellCatalogFeaturesRoute =
+  AdminShellCatalogFeaturesRouteImport.update({
+    id: '/catalog/features',
+    path: '/catalog/features',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
 const AdminShellPackagesIdEditRoute =
   AdminShellPackagesIdEditRouteImport.update({
     id: '/packages/$id/edit',
@@ -102,6 +116,8 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminShellAuditLogsRoute
   '/admin/dashboard': typeof AdminShellDashboardRoute
   '/admin/users': typeof AdminShellUsersRoute
+  '/admin/catalog/features': typeof AdminShellCatalogFeaturesRoute
+  '/admin/catalog/modules': typeof AdminShellCatalogModulesRoute
   '/admin/hospitals/$id': typeof AdminShellHospitalsIdRoute
   '/admin/hospitals/create': typeof AdminShellHospitalsCreateRoute
   '/admin/packages/create': typeof AdminShellPackagesCreateRoute
@@ -117,6 +133,8 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminShellAuditLogsRoute
   '/admin/dashboard': typeof AdminShellDashboardRoute
   '/admin/users': typeof AdminShellUsersRoute
+  '/admin/catalog/features': typeof AdminShellCatalogFeaturesRoute
+  '/admin/catalog/modules': typeof AdminShellCatalogModulesRoute
   '/admin/hospitals/$id': typeof AdminShellHospitalsIdRoute
   '/admin/hospitals/create': typeof AdminShellHospitalsCreateRoute
   '/admin/packages/create': typeof AdminShellPackagesCreateRoute
@@ -133,6 +151,8 @@ export interface FileRoutesById {
   '/admin/_shell/audit-logs': typeof AdminShellAuditLogsRoute
   '/admin/_shell/dashboard': typeof AdminShellDashboardRoute
   '/admin/_shell/users': typeof AdminShellUsersRoute
+  '/admin/_shell/catalog/features': typeof AdminShellCatalogFeaturesRoute
+  '/admin/_shell/catalog/modules': typeof AdminShellCatalogModulesRoute
   '/admin/_shell/hospitals/$id': typeof AdminShellHospitalsIdRoute
   '/admin/_shell/hospitals/create': typeof AdminShellHospitalsCreateRoute
   '/admin/_shell/packages/create': typeof AdminShellPackagesCreateRoute
@@ -150,6 +170,8 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/dashboard'
     | '/admin/users'
+    | '/admin/catalog/features'
+    | '/admin/catalog/modules'
     | '/admin/hospitals/$id'
     | '/admin/hospitals/create'
     | '/admin/packages/create'
@@ -165,6 +187,8 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/dashboard'
     | '/admin/users'
+    | '/admin/catalog/features'
+    | '/admin/catalog/modules'
     | '/admin/hospitals/$id'
     | '/admin/hospitals/create'
     | '/admin/packages/create'
@@ -180,6 +204,8 @@ export interface FileRouteTypes {
     | '/admin/_shell/audit-logs'
     | '/admin/_shell/dashboard'
     | '/admin/_shell/users'
+    | '/admin/_shell/catalog/features'
+    | '/admin/_shell/catalog/modules'
     | '/admin/_shell/hospitals/$id'
     | '/admin/_shell/hospitals/create'
     | '/admin/_shell/packages/create'
@@ -280,6 +306,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellHospitalsIdRouteImport
       parentRoute: typeof AdminShellRoute
     }
+    '/admin/_shell/catalog/modules': {
+      id: '/admin/_shell/catalog/modules'
+      path: '/catalog/modules'
+      fullPath: '/admin/catalog/modules'
+      preLoaderRoute: typeof AdminShellCatalogModulesRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/catalog/features': {
+      id: '/admin/_shell/catalog/features'
+      path: '/catalog/features'
+      fullPath: '/admin/catalog/features'
+      preLoaderRoute: typeof AdminShellCatalogFeaturesRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
     '/admin/_shell/packages/$id/edit': {
       id: '/admin/_shell/packages/$id/edit'
       path: '/packages/$id/edit'
@@ -295,6 +335,8 @@ interface AdminShellRouteChildren {
   AdminShellAuditLogsRoute: typeof AdminShellAuditLogsRoute
   AdminShellDashboardRoute: typeof AdminShellDashboardRoute
   AdminShellUsersRoute: typeof AdminShellUsersRoute
+  AdminShellCatalogFeaturesRoute: typeof AdminShellCatalogFeaturesRoute
+  AdminShellCatalogModulesRoute: typeof AdminShellCatalogModulesRoute
   AdminShellHospitalsIdRoute: typeof AdminShellHospitalsIdRoute
   AdminShellHospitalsCreateRoute: typeof AdminShellHospitalsCreateRoute
   AdminShellPackagesCreateRoute: typeof AdminShellPackagesCreateRoute
@@ -308,6 +350,8 @@ const AdminShellRouteChildren: AdminShellRouteChildren = {
   AdminShellAuditLogsRoute: AdminShellAuditLogsRoute,
   AdminShellDashboardRoute: AdminShellDashboardRoute,
   AdminShellUsersRoute: AdminShellUsersRoute,
+  AdminShellCatalogFeaturesRoute: AdminShellCatalogFeaturesRoute,
+  AdminShellCatalogModulesRoute: AdminShellCatalogModulesRoute,
   AdminShellHospitalsIdRoute: AdminShellHospitalsIdRoute,
   AdminShellHospitalsCreateRoute: AdminShellHospitalsCreateRoute,
   AdminShellPackagesCreateRoute: AdminShellPackagesCreateRoute,
