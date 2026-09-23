@@ -58,6 +58,7 @@ function CatalogPage() {
   const [deleteTarget, setDeleteTarget] = useState<CatalogModule | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [detachingFeatureId, setDetachingFeatureId] = useState<number | null>(null);
 
   // Feature attach state — per module row
   const [attachModuleId, setAttachModuleId] = useState<number | null>(null);
@@ -261,6 +262,19 @@ function CatalogPage() {
     }
   }
 
+  async function detachFeature(moduleId: number, featureId: number, featureCode: string) {
+    setDetachingFeatureId(featureId);
+    try {
+      await api.catalog.detachFeature(moduleId, featureId);
+      toast.success(`Feature “${featureCode}” detached from module`);
+      load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to detach feature");
+    } finally {
+      setDetachingFeatureId(null);
+    }
+  }
+
   // Top-level modules (children render nested)
   const roots = modules.filter((m) => !m.parentId);
   const attachableFeatures = features.filter(
@@ -352,6 +366,8 @@ function CatalogPage() {
                 setAttachFeatureId("");
               }}
               onAttachConfirm={attachFeature}
+              onDetachFeature={detachFeature}
+              detachingFeatureId={detachingFeatureId}
             />
           ))}
         </div>
@@ -630,7 +646,7 @@ function CatalogPage() {
       />
 
       <style>{`
-        .cat-input { width:100%; height:40px; border-radius:8px; border:1px solid var(--input); background:var(--background); padding:0 12px; font-size:14px; outline:none; }
+        .cat-input { width:100%; height:40px; border-radius:8px; border:1px solid var(--input); background:var(--background); padding:0 12px; font-size:14px; outline:none; cursor:pointer; }
         .cat-input:focus { border-color: var(--accent); }
       `}</style>
     </div>
@@ -652,6 +668,8 @@ function ModuleRow({
   setAttachFeatureId,
   onAttachClose,
   onAttachConfirm,
+  onDetachFeature,
+  detachingFeatureId,
 }: {
   module: CatalogModule;
   depth: number;
@@ -667,6 +685,8 @@ function ModuleRow({
   setAttachFeatureId: (v: string) => void;
   onAttachClose: () => void;
   onAttachConfirm: () => void;
+  onDetachFeature: (moduleId: number, featureId: number, featureCode: string) => void;
+  detachingFeatureId: number | null;
 }) {
   const children = allModules.filter((m) => m.parentId === module.id);
 
@@ -721,7 +741,7 @@ function ModuleRow({
             )}
             <button
               onClick={() => onAttach(module.id)}
-              className="text-xs font-semibold text-accent-foreground hover:underline px-2"
+              className="cursor-pointer text-xs font-semibold text-accent-foreground hover:underline px-2"
             >
               <Check className="size-3 inline mr-0.5" /> Features
             </button>
@@ -741,13 +761,25 @@ function ModuleRow({
         </div>
 
         {(module.features?.length ?? 0) > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3 pl-12">
+          <div className="flex flex-wrap items-center gap-1.5 mt-3 pl-12">
             {module.features!.map((mf) => (
               <span
                 key={mf.feature.id}
-                className="text-[11px] rounded-full border border-border px-2.5 py-0.5 text-muted-foreground"
+                className="inline-flex items-center gap-1 text-[11px] rounded-full border border-border pl-2.5 pr-1 py-0.5 text-muted-foreground"
               >
                 {mf.feature.code}
+                <button
+                  onClick={() => onDetachFeature(module.id, mf.feature.id, mf.feature.code)}
+                  disabled={detachingFeatureId === mf.feature.id}
+                  className="grid place-items-center size-4 rounded-full hover:bg-destructive/15 hover:text-destructive disabled:opacity-50 cursor-pointer"
+                  title={`Detach ${mf.feature.code} from ${module.name}`}
+                >
+                  {detachingFeatureId === mf.feature.id ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <X className="size-3" />
+                  )}
+                </button>
               </span>
             ))}
           </div>
@@ -775,7 +807,7 @@ function ModuleRow({
           <button
             onClick={onAttachConfirm}
             disabled={!attachFeatureId}
-            className="h-9 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-60"
+            className="cursor-pointer h-9 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-60"
           >
             Attach
           </button>
@@ -805,6 +837,8 @@ function ModuleRow({
           setAttachFeatureId={setAttachFeatureId}
           onAttachClose={onAttachClose}
           onAttachConfirm={onAttachConfirm}
+          onDetachFeature={onDetachFeature}
+          detachingFeatureId={detachingFeatureId}
         />
       ))}
     </div>

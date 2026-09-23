@@ -92,6 +92,21 @@
 
 @layer base {
   * { border-color: var(--color-border); }
+  /* Interactive elements always show the pointer cursor */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  [role="menuitem"],
+  [role="option"],
+  [role="tab"],
+  a[href],
+  label[for],
+  select:not(:disabled),
+  summary,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"] { cursor: pointer; }
   html, body { font-family: var(--font-sans); }
   body {
     background-color: var(--color-background);

@@ -373,6 +373,10 @@ export const api = {
       apiFetch<void>(`/api/catalog/modules/${moduleId}/features/${featureId}`, {
         method: "POST",
       }),
+    detachFeature: (moduleId: number, featureId: number) =>
+      apiFetch<void>(`/api/catalog/modules/${moduleId}/features/${featureId}`, {
+        method: "DELETE",
+      }),
   },
   auditLogs: {
     list: (params?: { page?: number; limit?: number; action?: string; actorEmail?: string }) => {
