@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Loader2,
   Pencil,
+  Trash2,
   PackagePlus,
 } from "lucide-react";
 import { api, formatINR, type Hospital, type HospitalStatus, type Package } from "@/lib/api";
@@ -49,33 +50,28 @@ function HospitalsList() {
   const [assignmentTarget, setAssignmentTarget] = useState<Hospital | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Hospital | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
+    const startedAt = Date.now();
     setLoading(true);
     setError(null);
-    api.hospitals
-      .list()
-      .then(setHospitals)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load hospitals"))
-      .finally(() => setLoading(false));
+    try {
+      const result = await api.hospitals.list();
+      setHospitals(result);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load hospitals");
+    } finally {
+      // Keep the skeleton visible briefly even when the API responds instantly,
+      // so clicking Refresh gives clear feedback instead of a barely visible flash.
+      const remaining = 450 - (Date.now() - startedAt);
+      if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
-
-  async function refresh() {
-    setRefreshing(true);
-    try {
-      await api.hospitals.list().then(setHospitals);
-      toast.success("Hospitals refreshed");
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to refresh hospitals");
-    } finally {
-      setRefreshing(false);
-    }
-  }
 
   async function suspend(h: Hospital) {
     setBusyId(h.id);
@@ -139,29 +135,23 @@ function HospitalsList() {
             {hospitals.length} tenants on the platform
           </p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={refreshing}
-          title="Re-fetch the hospitals table"
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold hover:bg-muted disabled:opacity-40"
-        >
-          {refreshing ? (
-            <>
-              <Loader2 className="size-4 animate-spin" /> Refreshing…
-            </>
-          ) : (
-            <>
-              <RefreshCw className="size-4" /> Refresh
-            </>
-          )}
-        </button>
-        <Link
-          to="/admin/hospitals/create"
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-95"
-        >
-          <Plus className="size-4" /> Create Hospital
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={loading}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted disabled:opacity-60"
+          >
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Refreshing…" : "Refresh"}
+          </button>
+          <Link
+            to="/admin/hospitals/create"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-95"
+          >
+            <Plus className="size-4" /> Create Hospital
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
@@ -311,12 +301,12 @@ function HospitalsList() {
                                 Reactivate
                               </button>
                             )}
-                            {/* <button
+                            <button
                               onClick={() => setDeleteTarget(h)}
                               className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md hover:bg-destructive/10 text-destructive text-xs font-medium"
                             >
                               <Trash2 className="size-3.5" /> Delete
-                            </button> */}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -473,8 +463,9 @@ function AssignPackageDialog({
           </DialogDescription>
         </DialogHeader>
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+            <Loader2 className="size-5 animate-spin" />
+            <span>Loading available packages…</span>
           </div>
         ) : error && packages.length === 0 ? (
           <div className="space-y-3 py-3">
@@ -532,6 +523,15 @@ function AssignPackageDialog({
           </div>
         )}
         <DialogFooter>
+          {hospital && (
+            <Link
+              to="/admin/hospitals/$id"
+              params={{ id: String(hospital.id) }}
+              className="h-10 px-4 inline-flex items-center rounded-lg text-sm font-semibold text-muted-foreground hover:bg-muted"
+            >
+              Open hospital page
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => onOpenChange(false)}
