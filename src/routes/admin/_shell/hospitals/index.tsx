@@ -1,11 +1,29 @@
 /* eslint-disable prettier/prettier */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Eye, Ban, RotateCcw, RefreshCw, Loader2, Pencil, Trash2 } from "lucide-react";
-import { api, type Hospital, type HospitalStatus } from "@/lib/api";
+import {
+  Plus,
+  Search,
+  Eye,
+  Ban,
+  RotateCcw,
+  RefreshCw,
+  Loader2,
+  Pencil,
+  PackagePlus,
+} from "lucide-react";
+import { api, formatINR, type Hospital, type HospitalStatus, type Package } from "@/lib/api";
 import { PlanBadge, StatusBadge } from "@/components/admin/Badges";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { HospitalFormDialog } from "@/components/admin/HospitalFormDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/_shell/hospitals/")({
@@ -28,8 +46,10 @@ function HospitalsList() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"All" | HospitalStatus>("All");
   const [editTarget, setEditTarget] = useState<Hospital | null>(null);
+  const [assignmentTarget, setAssignmentTarget] = useState<Hospital | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Hospital | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -41,7 +61,21 @@ function HospitalsList() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function refresh() {
+    setRefreshing(true);
+    try {
+      await api.hospitals.list().then(setHospitals);
+      toast.success("Hospitals refreshed");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to refresh hospitals");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function suspend(h: Hospital) {
     setBusyId(h.id);
@@ -91,9 +125,9 @@ function HospitalsList() {
           (status === "All" || h.status === status) &&
           (q === "" ||
             h.name.toLowerCase().includes(q.toLowerCase()) ||
-            h.code.toLowerCase().includes(q.toLowerCase()))
+            h.code.toLowerCase().includes(q.toLowerCase())),
       ),
-    [hospitals, q, status]
+    [hospitals, q, status],
   );
 
   return (
@@ -101,8 +135,27 @@ function HospitalsList() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold">Hospitals</h1>
-          <p className="text-sm text-muted-foreground">{hospitals.length} tenants on the platform</p>
+          <p className="text-sm text-muted-foreground">
+            {hospitals.length} tenants on the platform
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={refreshing}
+          title="Re-fetch the hospitals table"
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold hover:bg-muted disabled:opacity-40"
+        >
+          {refreshing ? (
+            <>
+              <Loader2 className="size-4 animate-spin" /> Refreshing…
+            </>
+          ) : (
+            <>
+              <RefreshCw className="size-4" /> Refresh
+            </>
+          )}
+        </button>
         <Link
           to="/admin/hospitals/create"
           className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-95"
@@ -172,15 +225,25 @@ function HospitalsList() {
 
                 {!loading &&
                   filtered.map((h) => {
-                    const pkg = h.packages?.[0]?.package;
+                    const activeAssignment = h.packages?.find(
+                      (assignment) => assignment.status === "ACTIVE",
+                    );
+                    const pkg = activeAssignment?.package ?? h.packages?.[0]?.package;
                     return (
-                      <tr key={h.id} className="border-t border-border hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={h.id}
+                        className="border-t border-border hover:bg-muted/40 transition-colors"
+                      >
                         <td className="px-5 py-3">
                           <div className="font-semibold">{h.name}</div>
                         </td>
                         <td className="px-5 py-3 font-mono text-xs">{h.code}</td>
                         <td className="px-5 py-3 text-xs">
-                          {pkg ? <PlanBadge plan={pkg.name} /> : <span className="text-muted-foreground">No package</span>}
+                          {pkg ? (
+                            <PlanBadge plan={pkg.name} />
+                          ) : (
+                            <span className="text-muted-foreground">No package</span>
+                          )}
                         </td>
                         <td className="px-5 py-3">
                           <StatusBadge status={badgeStatus(h.status)} />
@@ -203,32 +266,57 @@ function HospitalsList() {
                             >
                               <Pencil className="size-3.5" /> Edit
                             </button>
+                            {!activeAssignment && (
+                              <button
+                                onClick={() => setAssignmentTarget(h)}
+                                disabled={assignmentTarget !== null || editTarget !== null}
+                                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md hover:bg-accent/10 text-accent-foreground text-xs font-medium disabled:opacity-50"
+                              >
+                                <PackagePlus className="size-3.5" /> Assign package
+                              </button>
+                            )}
                             {h.status === "ACTIVE" && (
                               <button
                                 onClick={() => suspend(h)}
-                                disabled={busyId === h.id}
+                                disabled={
+                                  busyId === h.id ||
+                                  assignmentTarget !== null ||
+                                  editTarget !== null
+                                }
                                 className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md hover:bg-destructive/10 text-destructive text-xs font-medium disabled:opacity-50"
                               >
-                                {busyId === h.id ? <Loader2 className="size-3.5 animate-spin" /> : <Ban className="size-3.5" />}
+                                {busyId === h.id ? (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                ) : (
+                                  <Ban className="size-3.5" />
+                                )}
                                 Suspend
                               </button>
                             )}
                             {h.status === "SUSPENDED" && (
                               <button
                                 onClick={() => reactivate(h)}
-                                disabled={busyId === h.id}
+                                disabled={
+                                  busyId === h.id ||
+                                  assignmentTarget !== null ||
+                                  editTarget !== null
+                                }
                                 className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md hover:bg-success/10 text-success text-xs font-medium disabled:opacity-50"
                               >
-                                {busyId === h.id ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />}
+                                {busyId === h.id ? (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="size-3.5" />
+                                )}
                                 Reactivate
                               </button>
                             )}
-                            <button
+                            {/* <button
                               onClick={() => setDeleteTarget(h)}
                               className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md hover:bg-destructive/10 text-destructive text-xs font-medium"
                             >
                               <Trash2 className="size-3.5" /> Delete
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                       </tr>
@@ -240,7 +328,9 @@ function HospitalsList() {
                     <td colSpan={6} className="px-5 py-16 text-center">
                       <div className="text-sm font-semibold">No hospitals found</div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {q || status !== "All" ? "Try clearing your filters." : "Create your first hospital to get started."}
+                        {q || status !== "All"
+                          ? "Try clearing your filters."
+                          : "Create your first hospital to get started."}
                       </div>
                       {!q && status === "All" && (
                         <Link
@@ -262,13 +352,31 @@ function HospitalsList() {
       <HospitalFormDialog
         open={editTarget !== null}
         hospital={editTarget}
-        onOpenChange={(o) => { if (!o) setEditTarget(null); }}
-        onSaved={() => { setEditTarget(null); load(); }}
+        onOpenChange={(o) => {
+          if (!o) setEditTarget(null);
+        }}
+        onSaved={() => {
+          setEditTarget(null);
+          load();
+        }}
+      />
+
+      <AssignPackageDialog
+        hospital={assignmentTarget}
+        onOpenChange={(open) => {
+          if (!open) setAssignmentTarget(null);
+        }}
+        onAssigned={() => {
+          setAssignmentTarget(null);
+          load();
+        }}
       />
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}
+        onOpenChange={(o) => {
+          if (!o) setDeleteTarget(null);
+        }}
         title="Delete hospital"
         description={
           deleteTarget
@@ -281,5 +389,168 @@ function HospitalsList() {
         onConfirm={confirmDelete}
       />
     </div>
+  );
+}
+
+function AssignPackageDialog({
+  hospital,
+  onOpenChange,
+  onAssigned,
+}: {
+  hospital: Hospital | null;
+  onOpenChange: (open: boolean) => void;
+  onAssigned: () => void;
+}) {
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const assignmentHospitalId = hospital?.id;
+
+  useEffect(() => {
+    if (assignmentHospitalId === undefined) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setSelectedPackageId(null);
+    api.packages
+      .list()
+      .then((result) => {
+        if (!cancelled) setPackages(result);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load packages");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [assignmentHospitalId]);
+
+  async function assign() {
+    if (!hospital || selectedPackageId === null) return;
+    setAssigning(true);
+    setError(null);
+    try {
+      // Guard against a concurrent assignment without changing hospital status.
+      const current = await api.hospitals.get(Number(hospital.id));
+      const active = current.packages?.find((assignment) => assignment.status === "ACTIVE");
+      if (active) {
+        const activePackageId = Number(active.packageId ?? active.package?.id);
+        if (activePackageId !== selectedPackageId) {
+          throw new Error(
+            "This hospital already has an active package. Refresh the hospital list to see it.",
+          );
+        }
+        toast.success("This package is already assigned to the hospital");
+      } else {
+        await api.hospitals.assignPackage(Number(hospital.id), Number(selectedPackageId));
+        toast.success(`Package assigned to ${hospital.name}`);
+      }
+      onAssigned();
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Failed to assign package";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setAssigning(false);
+    }
+  }
+
+  return (
+    <Dialog open={hospital !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Assign a package</DialogTitle>
+          <DialogDescription>
+            {hospital
+              ? `Choose a package for ${hospital.name}. This only assigns the package; it does not activate, suspend, or reactivate the hospital.`
+              : "Choose a package for this hospital."}
+          </DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : error && packages.length === 0 ? (
+          <div className="space-y-3 py-3">
+            <div role="alert" className="text-sm text-destructive">
+              {error}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (hospital) {
+                  setLoading(true);
+                  setError(null);
+                  api.packages
+                    .list()
+                    .then(setPackages)
+                    .catch((e: unknown) =>
+                      setError(e instanceof Error ? e.message : "Failed to load packages"),
+                    )
+                    .finally(() => setLoading(false));
+                }
+              }}
+              className="text-sm font-semibold text-accent-foreground underline"
+            >
+              Retry loading packages
+            </button>
+          </div>
+        ) : packages.length === 0 ? (
+          <div className="py-6 text-sm text-muted-foreground">
+            No packages are available. Create a package first, then try again.
+          </div>
+        ) : (
+          <div className="space-y-3 py-2">
+            <label className="block text-sm font-medium" htmlFor="hospital-package-select">
+              Package
+            </label>
+            <select
+              id="hospital-package-select"
+              value={selectedPackageId ?? ""}
+              onChange={(e) => setSelectedPackageId(e.target.value ? Number(e.target.value) : null)}
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+              disabled={assigning}
+            >
+              <option value="">Select a package…</option>
+              {packages.map((pkg) => (
+                <option key={pkg.id} value={pkg.id}>
+                  {pkg.name} — {formatINR(pkg.monthlyPrice)}/mo
+                </option>
+              ))}
+            </select>
+            {error && (
+              <div role="alert" className="text-xs text-destructive">
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+        <DialogFooter>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            disabled={assigning}
+            className="h-10 px-4 rounded-lg border border-border text-sm font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={assign}
+            disabled={loading || assigning || selectedPackageId === null || packages.length === 0}
+            className="h-10 px-4 inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+          >
+            {assigning && <Loader2 className="size-4 animate-spin" />}
+            {assigning ? "Assigning…" : "Assign package"}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

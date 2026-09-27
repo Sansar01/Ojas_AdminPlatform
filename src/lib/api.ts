@@ -168,6 +168,8 @@ export type Hospital = {
 export type Package = {
   id: number;
   name: string;
+  /** Stable package identifier; optional on older API records. */
+  code?: string;
   description?: string;
   monthlyPrice: number;
   yearlyPrice: number;
@@ -294,7 +296,7 @@ export const api = {
     assignPackage: (id: number, packageId: number) =>
       apiFetch<Hospital>(`/api/hospitals/${id}/packages`, {
         method: "POST",
-        body: JSON.stringify({ packageId, startDate: new Date().toISOString() }),
+        body: JSON.stringify({ hospitalId: Number(id), packageId: Number(packageId), startDate: new Date().toISOString() }),
       }),
     activate: (id: number, packageId?: number) =>
       apiFetch<{
